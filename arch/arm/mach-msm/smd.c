@@ -147,6 +147,9 @@ struct smd_alloc_elm {
 	uint32_t cid;
 	uint32_t ctype;
 	uint32_t ref_count;
+    // meidh ugly patch
+    // in mega, this struct is 36 Byte length
+    uint32_t unknown;
 };
 
 struct smd_half_channel {
