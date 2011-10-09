@@ -35,6 +35,7 @@
 #include <mach/htc_battery.h>
 
 #define MSMFB_DEBUG 1
+//#define CONFIG_FB_MSM_LOGO 1
 #ifdef CONFIG_FB_MSM_LOGO
 #define INIT_IMAGE_FILE "/logo.rle"
 extern int load_565rle_image(char *filename);
@@ -848,9 +849,9 @@ static int msmfb_probe(struct platform_device *pdev)
 
 	msmfb->fake_vsync.function = msmfb_fake_vsync;
 
-//	ret = register_framebuffer(fb);             //freeze when installing 240x320 panel
-//	if (ret)
-//		goto error_register_framebuffer;
+	ret = register_framebuffer(fb);             //freeze when installing 240x320 panel
+	if (ret)
+		goto error_register_framebuffer;
 
 	msmfb->sleeping = WAKING;
 
