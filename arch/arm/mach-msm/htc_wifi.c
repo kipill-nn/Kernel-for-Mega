@@ -120,19 +120,22 @@ EXPORT_SYMBOL(set_reset);
 /*
  * add board name here
  */
-#ifdef CONFIG_ARCH_MEGA
 #ifdef CONFIG_ARCH_MSM7225
+#ifdef CONFIG_MACH_MEGA
+BOARD_WIFI_FUN(bahamas)
+#endif
 #ifdef CONFIG_MACH_BAHAMAS
 BOARD_WIFI_FUN(bahamas)
 #endif
 #endif
-#endif
+
 static struct wifi_platform_data board_wifi_tbl[] = {
-#ifdef CONFIG_ARCH_MEGA
 #ifdef CONFIG_ARCH_MSM7225
-#ifdef CONFIG_MACH_BAHAMAS
+#ifdef CONFIG_MACH_MEGA
 	BOARD_WIFI(bahamas, "bahamas")
 #endif
+#ifdef CONFIG_MACH_BAHAMAS
+	BOARD_WIFI(bahamas, "bahamas")
 #endif
 #endif
 };
@@ -178,6 +181,9 @@ int __init board_wifi_init(void)
 		board_wifi = board_get("bahamas");
 		break;
 #endif
+    case MACH_TYPE_MEGA:
+        board_wifi = board_get("bahamas");
+        break;
 #endif
 	default:
 		printk(KERN_ERR "WiFi: unknown machine type %d\n", machine_arch_type);
