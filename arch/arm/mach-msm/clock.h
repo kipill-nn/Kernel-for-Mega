@@ -26,6 +26,14 @@
 #define CLKFLAG_ARCH_MSM7X00A		(0x00010000)
 #define CLKFLAG_ARCH_ALL		(0xffff0000)
 
+struct clk_ops {
+    int (*enable)(unsigned id);
+    int (*disable)(unsigned id);
+    int (*set_rate)(unsigned id, unsigned rate);
+    int (*set_flags)(unsigned id, unsigned flags);
+    unsigned (*is_enabled)(unsigned id);
+};
+
 struct clk {
 	uint32_t id;
 	uint32_t count;
