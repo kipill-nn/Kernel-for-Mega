@@ -155,4 +155,13 @@
 #define MSM_RAMCONSOLE_PHYS   0x0E700000
 #define MSM_RAMCONSOLE_SIZE   SZ_1M
 
+/*  need to be verified */
+#define MSM_IMEM_BASE         IOMEM(0xF900B000)
+#define MSM_IMEM_PHYS         0xA8300000
+#define MSM_IMEM_SIZE         0x100
+
+#define MSM_AXI_BASE          IOMEM(0xF900C000)
+#define MSM_AXI_PHYS          0xA8200000
+#define MSM_AXI_SIZE          SZ_1M
+
 #endif
