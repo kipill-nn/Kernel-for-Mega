@@ -788,7 +788,7 @@ static struct platform_device *devices[] __initdata = {
 	&bahamas_rfkill,
 	&bahamas_reset_keys_device,
 #ifdef CONFIG_HTC_PWRSINK
-	//&bahamas_pwr_sink,
+	&bahamas_pwr_sink,
 #endif
 };
 
@@ -1083,8 +1083,9 @@ static void __init bahamas_init(void)
 	bahamas_init_h2w_power_gpio();
 //        printk("\n\nboard-mega.c: bahamas init h2w power gpio\n\n");
 //#if 1
+    printk("\n\nBegin MMCinit !!!!!!!!!!!!!!\n\n");
 	rc = bahamas_init_mmc(system_rev);
-//        printk("\n\nboard-mega.c: init mmc\n\n");
+    printk("\n\nFinished board-mega.c: init mmc\n\n");
 	if (rc)
 		printk(KERN_CRIT "%s: MMC init failure (%d)\n", __func__, rc);
 //#endif
@@ -1113,17 +1114,17 @@ static void __init bahamas_init(void)
 	}
 
 /*~CC090319*/
-	//platform_add_devices(devices, ARRAY_SIZE(devices));
+	platform_add_devices(devices, ARRAY_SIZE(devices));
 
 	/* Read Config 8 200 (Full Speed USB Mode) */
-	/*if (readl(MSM_SHARED_RAM_BASE + 0xFC054) & 0x200)
+	if (readl(MSM_SHARED_RAM_BASE + 0xFC054) & 0x200)
 		bahamas_h2w_data.flags |= FULL_SPEED_USB;
 
 	if (system_rev >= 3)
 		bahamas_h2w_data.flags |= _35MM_MIC_DET_L2H;
 
-/*	if (system_rev >= 5)
-		i2c_register_board_info(0, i2c_sensor, ARRAY_SIZE(i2c_sensor));
+//	if (system_rev >= 5)
+//		i2c_register_board_info(0, i2c_sensor, ARRAY_SIZE(i2c_sensor));
 
 	i2c_register_board_info(0, i2c_devices, ARRAY_SIZE(i2c_devices));
 	i2c_register_board_info(0 ,&i2c_microp_devices, 1);

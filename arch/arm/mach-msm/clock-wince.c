@@ -779,7 +779,7 @@ void __init msm_clock_init(void)
 {
 	struct clk *clk;
 	msm_clock_parameters = msm_clock_parameters_def;
-	
+	debug_mask |= DEBUG_UNKNOWN_ID | DEBUG_UNKNOWN_FREQ | DEBUG_MDNS | DEBUG_UNKNOWN_CMD;
 	spin_lock_init(&clocks_lock);
 	mutex_lock(&clocks_mutex);
 	for (clk = msm_clocks; clk && clk->name; clk++) {

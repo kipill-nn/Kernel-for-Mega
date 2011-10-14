@@ -40,6 +40,7 @@ static int __init do_linuxrc(void * shell)
 
 static void __init handle_initrd(void)
 {
+    printk("\n\nhandle_initrd\n\n");
 	int error;
 	int pid;
 
@@ -110,6 +111,7 @@ static void __init handle_initrd(void)
 
 int __init initrd_load(void)
 {
+    printk("\n\nmounting initrd\n\n");
 	if (mount_initrd) {
 		create_dev("/dev/ram", Root_RAM0);
 		/*
@@ -119,6 +121,7 @@ int __init initrd_load(void)
 		 * mounted in the normal path.
 		 */
 		if (rd_load_image("/initrd.image") && ROOT_DEV != Root_RAM0) {
+            printk("\n\nroot_dev is not ram0!!\n\n");
 			sys_unlink("/initrd.image");
 			handle_initrd();
 			return 1;

@@ -236,12 +236,12 @@ static void htc_fb_console_write(struct console *console, const char *s, unsigne
 #ifndef CONFIG_HTC_FB_CONSOLE_BOOT
 	// See if a framebuffer has been registered. If so, we disable this console to prevent conflict with
 	// other FB devices (i.e. msm_fb).
-	if (num_registered_fb > 0) {
-		//*(volatile unsigned int*)(0xF8003000 + 0x808) |= 0x1000000;
-		//printk(KERN_INFO "htc_fb_console: framebuffer device detected, disabling boot console\n");
-		console->flags = 0;
-		return;
-	}
+//	if (num_registered_fb > 0) {
+//        *(volatile unsigned int*)(0xF8003000 + 0x808) |= 0x1000000;
+//        printk(KERN_INFO "htc_fb_console: framebuffer device detected, disabling boot console\n");
+//        console->flags = 0;
+//		return;
+//	}
 #endif
 
 	scroll = 0;
@@ -303,7 +303,7 @@ static void htc_fb_console_write(struct console *console, const char *s, unsigne
 
 	htc_fb_console_update();
 	/* Delay so we can see what's there, we have no keys to scroll */
-	mdelay(100);
+	mdelay(300);
 
 }
 

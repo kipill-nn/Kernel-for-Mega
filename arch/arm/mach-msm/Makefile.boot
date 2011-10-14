@@ -7,7 +7,7 @@ endif
 ifeq ($(CONFIG_ARCH_MSM7225),y)
   zreladdr-y        := 0x00208000
 params_phys-y       := 0x00200100
-initrd_phys-y       := 0x00C00000
+initrd_phys-y       := 0x00A00000
 endif
 
 ifeq ($(CONFIG_ARCH_MSM7625),y)

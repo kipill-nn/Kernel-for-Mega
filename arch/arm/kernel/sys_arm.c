@@ -263,6 +263,7 @@ out:
 
 int kernel_execve(const char *filename, char *const argv[], char *const envp[])
 {
+    printk("\n\nkernel_execve(%s, %s, %s)\n\n", filename, argv[0], envp[0]);
 	struct pt_regs regs;
 	int ret;
 
@@ -272,11 +273,15 @@ int kernel_execve(const char *filename, char *const argv[], char *const envp[])
 	if (ret < 0)
 		goto out;
 
+    printk("passed do_execve\ndebugging suspicious codes\n");
 	/*
 	 * Save argc to the register structure for userspace.
 	 */
 	regs.ARM_r0 = ret;
-
+//
+// Meidh debug: Following codes maybe problematic
+//
+    int tmp;
 	/*
 	 * We were successful.  We won't be returning to our caller, but
 	 * instead to user space by manipulating the kernel stack.

@@ -598,33 +598,36 @@ err_out:
 static void
 samsung_cabc_suspend(struct early_suspend *h)
 {
-	struct cabc *cabc = to_cabc(h, early_suspend);
-	int res;
+    return;
 
-	B(KERN_DEBUG "%s\n", __func__);
-	res = batt_notifier_call_chain(BATT_EVENT_SUSPEND, NULL);
-	if (res != NOTIFY_STOP) {
-		cabc->status |= SUSPEND;
-		if (cabc_check_mask(cabc, LIGHT_SENSOR_ON))
-			led_classdev_suspend(&cabc->light_sensor_dev);
-	} else {
-		mutex_lock(&cabc->lock);
-		cabc->status |= ENFORCE_ON;
-		mutex_unlock(&cabc->lock);
-		__set_brightness(cabc, DEFAULT_BRIGHTNESS);
-	}
+//	struct cabc *cabc = to_cabc(h, early_suspend);
+//	int res;
+//
+//	B(KERN_DEBUG "%s\n", __func__);
+//	res = batt_notifier_call_chain(BATT_EVENT_SUSPEND, NULL);
+//	if (res != NOTIFY_STOP) {
+//		cabc->status |= SUSPEND;
+//		if (cabc_check_mask(cabc, LIGHT_SENSOR_ON))
+//			led_classdev_suspend(&cabc->light_sensor_dev);
+//	} else {
+//		mutex_lock(&cabc->lock);
+//		cabc->status |= ENFORCE_ON;
+//		mutex_unlock(&cabc->lock);
+//		__set_brightness(cabc, DEFAULT_BRIGHTNESS);
+//	}
 }
 
 static void
 samsung_cabc_resume(struct early_suspend *h)
 {
-	struct cabc *cabc = to_cabc(h, early_suspend);
-
-	B(KERN_DEBUG "%s\n", __func__);
-
-	cabc->status &= ~(ENFORCE_ON | SUSPEND);
-	if (cabc->status & LIGHT_SENSOR_ON)
-		led_classdev_resume(&cabc->light_sensor_dev);
+    return;
+//	struct cabc *cabc = to_cabc(h, early_suspend);
+//
+//	B(KERN_DEBUG "%s\n", __func__);
+//
+//	cabc->status &= ~(ENFORCE_ON | SUSPEND);
+//	if (cabc->status & LIGHT_SENSOR_ON)
+//		led_classdev_resume(&cabc->light_sensor_dev);
 }
 
 static int samsung_cabc_probe(struct platform_device *pdev)

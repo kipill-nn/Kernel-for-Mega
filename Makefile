@@ -196,8 +196,8 @@ ARCH		?= $(SUBARCH)
 CROSS_COMPILE	?= arm-eabi-
 
 # Cotulla: change this path to your tools location
-ARCH=arm
-CROSS_COMPILE=/home/dev/arm-2009q1/bin/arm-none-linux-gnueabi-
+#ARCH=arm
+#CROSS_COMPILE=/home/dev/arm-2009q1/bin/arm-none-linux-gnueabi-
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)

@@ -1271,30 +1271,42 @@ int do_execve(char * filename,
 	struct file *file;
 	struct files_struct *displaced;
 	int retval;
+    
+    printk("In fs/exec.c do_exece(%s, %s, %s)\n", filename, argv[0], envp[0]);
 
 	retval = unshare_files(&displaced);
-	if (retval)
+	if (retval) {
+        printk("do_exece: unshare_files error!!");
 		goto out_ret;
+    }
 
 	retval = -ENOMEM;
 	bprm = kzalloc(sizeof(*bprm), GFP_KERNEL);
-	if (!bprm)
+	if (!bprm) {
+        printk("do_exece: kzalloc error!!");
 		goto out_files;
+    }
 
 	retval = mutex_lock_interruptible(&current->cred_exec_mutex);
-	if (retval < 0)
+	if (retval < 0) {
+        printk("do_exece: mutex_lock_interruptible error!!");
 		goto out_free;
+    }
 
 	retval = -ENOMEM;
 	bprm->cred = prepare_exec_creds();
-	if (!bprm->cred)
+	if (!bprm->cred) {
+        printk("do_exece: prepare_exec_creds error!!");
 		goto out_unlock;
+    }
 	check_unsafe_exec(bprm, displaced);
 
 	file = open_exec(filename);
 	retval = PTR_ERR(file);
-	if (IS_ERR(file))
+	if (IS_ERR(file)) {
+        printk("do_exece: open_exec error!!");
 		goto out_unlock;
+    }
 
 	sched_exec();
 
@@ -1303,39 +1315,56 @@ int do_execve(char * filename,
 	bprm->interp = filename;
 
 	retval = bprm_mm_init(bprm);
-	if (retval)
+	if (retval) {
+        printk("do_exece: bprm_mm_init error!!");
 		goto out_file;
+    }
 
 	bprm->argc = count(argv, MAX_ARG_STRINGS);
-	if ((retval = bprm->argc) < 0)
+	if ((retval = bprm->argc) < 0) {
+        printk("do_exece: bprm->argc count error!!");
 		goto out;
+    }
 
 	bprm->envc = count(envp, MAX_ARG_STRINGS);
-	if ((retval = bprm->envc) < 0)
+	if ((retval = bprm->envc) < 0) {
+        printk("do_exece: bprm->envc count error!!");
 		goto out;
+    }
 
 	retval = prepare_binprm(bprm);
-	if (retval < 0)
+	if (retval < 0) {
+        printk("do_exece: prepare_binprm error!!");
 		goto out;
+    }
 
 	retval = copy_strings_kernel(1, &bprm->filename, bprm);
-	if (retval < 0)
+	if (retval < 0) {
+        printk("do_exece: copy_strings_kernel error!!");
 		goto out;
+    }
 
 	bprm->exec = bprm->p;
 	retval = copy_strings(bprm->envc, envp, bprm);
-	if (retval < 0)
+	if (retval < 0) {
+        printk("do_exece: bprm->envc copy_strings error!!");
 		goto out;
+    }
 
 	retval = copy_strings(bprm->argc, argv, bprm);
-	if (retval < 0)
+	if (retval < 0) {
+        printk("do_exece: bprm->argc copy_strings error!!");
 		goto out;
+    }
 
 	current->flags &= ~PF_KTHREAD;
 	retval = search_binary_handler(bprm,regs);
-	if (retval < 0)
+	if (retval < 0) {
+        printk("do_exece: search_binary_handler error!!");
 		goto out;
+    }
 
+    printk("do_exece: succeeded !!\n");
 	/* execve succeeded */
 	mutex_unlock(&current->cred_exec_mutex);
 	acct_update_integrals(current);

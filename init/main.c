@@ -75,6 +75,7 @@
 #include <asm/smp.h>
 #endif
 
+#include <linux/fb.h>
 static int kernel_init(void *);
 
 extern void init_IRQ(void);
@@ -527,6 +528,309 @@ void __init __weak thread_info_cache_init(void)
 {
 }
 
+/*
+ * Perform a memory test. A more complete alternative test can be
+ * configured using CONFIG_SYS_ALT_MEMTEST. The complete test loops until
+ * interrupted by ctrl-c or by a failure of one of the sub-tests.
+ */
+int do_mem_mtest ()
+{
+	ulong	*addr, *start, *end;
+	ulong	val;
+	ulong	readback;
+	ulong	errs = 0;
+	int iterations = 1;
+	int iteration_limit;
+
+#if defined(CONFIG_SYS_ALT_MEMTEST)
+	ulong	len;
+	ulong	offset;
+	ulong	test_offset;
+	ulong	pattern;
+	ulong	temp;
+	ulong	anti_pattern;
+	ulong	num_words;
+#if defined(CONFIG_SYS_MEMTEST_SCRATCH)
+	ulong *dummy = (ulong*)CONFIG_SYS_MEMTEST_SCRATCH;
+#else
+	ulong *dummy = 0;	/* yes, this is address 0x0, not NULL */
+#endif
+	int	j;
+
+	static const ulong bitpattern[] = {
+		0x00000001,	/* single bit */
+		0x00000003,	/* two adjacent bits */
+		0x00000007,	/* three adjacent bits */
+		0x0000000F,	/* four adjacent bits */
+		0x00000005,	/* two non-adjacent bits */
+		0x00000015,	/* three non-adjacent bits */
+		0x00000055,	/* four non-adjacent bits */
+		0xaaaaaaaa,	/* alternating 1/0 */
+	};
+#else
+	ulong	incr;
+	ulong	pattern;
+#endif
+
+		start = (ulong *)0xf9600000;
+
+		end = (ulong *)0x000000ff;
+
+		pattern = 0;
+
+		iteration_limit = 0;
+
+#if defined(CONFIG_SYS_ALT_MEMTEST)
+	printk ("Testing %08x ... %08x:\n", (uint)start, (uint)end);
+	PRINTF("%s:%d: start 0x%p end 0x%p\n",
+		__FUNCTION__, __LINE__, start, end);
+
+	for (;;) {
+
+
+		if (iteration_limit && iterations > iteration_limit) {
+			printk("Tested %d iteration(s) with %lu errors.\n",
+				iterations-1, errs);
+			return errs != 0;
+		}
+
+		printk("Iteration: %6d\r", iterations);
+		PRINTF("\n");
+		iterations++;
+
+		/*
+		 * Data line test: write a pattern to the first
+		 * location, write the 1's complement to a 'parking'
+		 * address (changes the state of the data bus so a
+		 * floating bus doen't give a false OK), and then
+		 * read the value back. Note that we read it back
+		 * into a variable because the next time we read it,
+		 * it might be right (been there, tough to explain to
+		 * the quality guys why it prints a failure when the
+		 * "is" and "should be" are obviously the same in the
+		 * error message).
+		 *
+		 * Rather than exhaustively testing, we test some
+		 * patterns by shifting '1' bits through a field of
+		 * '0's and '0' bits through a field of '1's (i.e.
+		 * pattern and ~pattern).
+		 */
+		addr = start;
+		for (j = 0; j < sizeof(bitpattern)/sizeof(bitpattern[0]); j++) {
+		    val = bitpattern[j];
+		    for(; val != 0; val <<= 1) {
+			*addr  = val;
+			*dummy  = ~val; /* clear the test data off of the bus */
+			readback = *addr;
+			if(readback != val) {
+			    printk ("FAILURE (data line): "
+				"expected %08lx, actual %08lx\n",
+					  val, readback);
+			    errs++;
+			    }
+			}
+			*addr  = ~val;
+			*dummy  = val;
+			readback = *addr;
+			if(readback != ~val) {
+			    printk ("FAILURE (data line): "
+				"Is %08lx, should be %08lx\n",
+					readback, ~val);
+			    errs++;
+			    }
+			}
+		    }
+		}
+
+		/*
+		 * Based on code whose Original Author and Copyright
+		 * information follows: Copyright (c) 1998 by Michael
+		 * Barr. This software is placed into the public
+		 * domain and may be used for any purpose. However,
+		 * this notice must not be changed or removed and no
+		 * warranty is either expressed or implied by its
+		 * publication or distribution.
+		 */
+
+		/*
+		 * Address line test
+		 *
+		 * Description: Test the address bus wiring in a
+		 *              memory region by performing a walking
+		 *              1's test on the relevant bits of the
+		 *              address and checking for aliasing.
+		 *              This test will find single-bit
+		 *              address failures such as stuck -high,
+		 *              stuck-low, and shorted pins. The base
+		 *              address and size of the region are
+		 *              selected by the caller.
+		 *
+		 * Notes:	For best results, the selected base
+		 *              address should have enough LSB 0's to
+		 *              guarantee single address bit changes.
+		 *              For example, to test a 64-Kbyte
+		 *              region, select a base address on a
+		 *              64-Kbyte boundary. Also, select the
+		 *              region size as a power-of-two if at
+		 *              all possible.
+		 *
+		 * Returns:     0 if the test succeeds, 1 if the test fails.
+		 */
+		len = ((ulong)end - (ulong)start)/sizeof(ulong);
+		pattern = (ulong) 0xaaaaaaaa;
+		anti_pattern = (ulong) 0x55555555;
+
+		PRINTF("%s:%d: length = 0x%.8lx\n",
+			__FUNCTION__, __LINE__,
+			len);
+		/*
+		 * Write the default pattern at each of the
+		 * power-of-two offsets.
+		 */
+		for (offset = 1; offset < len; offset <<= 1) {
+			start[offset] = pattern;
+		}
+
+		/*
+		 * Check for address bits stuck high.
+		 */
+		test_offset = 0;
+		start[test_offset] = anti_pattern;
+
+		for (offset = 1; offset < len; offset <<= 1) {
+		    temp = start[offset];
+		    if (temp != pattern) {
+			printk ("\nFAILURE: Address bit stuck high @ 0x%.8lx:"
+				" expected 0x%.8lx, actual 0x%.8lx\n",
+				(ulong)&start[offset], pattern, temp);
+			errs++;
+		    }
+		}
+		start[test_offset] = pattern;
+
+		/*
+		 * Check for addr bits stuck low or shorted.
+		 */
+		for (test_offset = 1; test_offset < len; test_offset <<= 1) {
+		    start[test_offset] = anti_pattern;
+
+		    for (offset = 1; offset < len; offset <<= 1) {
+			temp = start[offset];
+			if ((temp != pattern) && (offset != test_offset)) {
+			    printk ("\nFAILURE: Address bit stuck low or shorted @"
+				" 0x%.8lx: expected 0x%.8lx, actual 0x%.8lx\n",
+				(ulong)&start[offset], pattern, temp);
+			    errs++;
+			}
+		    }
+		    start[test_offset] = pattern;
+		}
+
+		/*
+		 * Description: Test the integrity of a physical
+		 *		memory device by performing an
+		 *		increment/decrement test over the
+		 *		entire region. In the process every
+		 *		storage bit in the device is tested
+		 *		as a zero and a one. The base address
+		 *		and the size of the region are
+		 *		selected by the caller.
+		 *
+		 * Returns:     0 if the test succeeds, 1 if the test fails.
+		 */
+		num_words = ((ulong)end - (ulong)start)/sizeof(ulong) + 1;
+
+		/*
+		 * Fill memory with a known pattern.
+		 */
+		for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++) {
+			start[offset] = pattern;
+		}
+
+		/*
+		 * Check each location and invert it for the second pass.
+		 */
+		for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++) {
+		    temp = start[offset];
+		    if (temp != pattern) {
+			printk ("\nFAILURE (read/write) @ 0x%.8lx:"
+				" expected 0x%.8lx, actual 0x%.8lx)\n",
+				(ulong)&start[offset], pattern, temp);
+			errs++;
+		    }
+
+		    anti_pattern = ~pattern;
+		    start[offset] = anti_pattern;
+		}
+
+		/*
+		 * Check each location for the inverted pattern and zero it.
+		 */
+		for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++) {
+		    anti_pattern = ~pattern;
+		    temp = start[offset];
+		    if (temp != anti_pattern) {
+			printk ("\nFAILURE (read/write): @ 0x%.8lx:"
+				" expected 0x%.8lx, actual 0x%.8lx)\n",
+				(ulong)&start[offset], anti_pattern, temp);
+			errs++;
+		    }
+		    start[offset] = 0;
+		}
+	}
+
+#else /* The original, quickie test */
+	incr = 1;
+	for (;;) {
+
+		if (iteration_limit && iterations > iteration_limit) {
+			printk("Tested %d iteration(s) with %lu errors.\n",
+				iterations-1, errs);
+			return errs != 0;
+		}
+		++iterations;
+
+		printk ("\rPattern %08lX  Writing..."
+			"%12s"
+			"\b\b\b\b\b\b\b\b\b\b",
+			pattern, "");
+
+		for (addr=start,val=pattern; addr<end; addr++) {
+			*addr = val;
+			val  += incr;
+		}
+
+		printk ("Reading...");
+
+		for (addr=start,val=pattern; addr<end; addr++) {
+			readback = *addr;
+			if (readback != val) {
+				printk ("\nMem error @ 0x%08X: "
+					"found %08lX, expected %08lX\n",
+					(uint)addr, readback, val);
+				errs++;
+			}
+			val += incr;
+		}
+
+		/*
+		 * Flip the pattern each time to make lots of zeros and
+		 * then, the next time, lots of ones.  We decrement
+		 * the "negative" patterns and increment the "positive"
+		 * patterns to preserve this feature.
+		 */
+		if(pattern & 0x80000000) {
+			pattern = -pattern;	/* complement & increment */
+		}
+		else {
+			pattern = ~pattern;
+		}
+		incr = -incr;
+	}
+#endif
+	return 0;	/* not reached */
+}
+
 asmlinkage void __init start_kernel(void)
 {
 	char * command_line;
@@ -741,12 +1045,13 @@ asmlinkage void __init start_kernel(void)
 //        printk("\n\nmain.c: acpi early init\n\n");
 	ftrace_init();        
 //        printk("\n\nmain.c: ftrace init\n\n");
+    //do_mem_mtest();
 	/* Do the rest non-__init'ed, we're now alive */
 	rest_init();
 //        printk("\n\nmain.c: rest init\n\n");
 }
 
-int initcall_debug;
+int initcall_debug = 0;
 core_param(initcall_debug, initcall_debug, bool, 0644);
 
 int do_one_initcall(initcall_t fn)
@@ -848,11 +1153,18 @@ static void run_init_process(char *init_filename)
 	kernel_execve(init_filename, argv_init, envp_init);
 }
 
+//#define INIT_IMAGE_FILE "/logo.rle"
+//extern int load_565rle_image(char *filename);
+
 /* This is a non __init function. Force it to be noinline otherwise gcc
  * makes it inline to init() and it becomes part of init.text section
  */
 static noinline int init_post(void)
 {
+    int fd, fd_fb;
+    unsigned count;
+    unsigned short *data;
+
 	/* need to finish all async __init code before freeing the memory */
 	async_synchronize_full();
         printk("\n\nmain.c: asunc_synchronize_full\n\n");
@@ -869,11 +1181,37 @@ static noinline int init_post(void)
 	if (sys_open((const char __user *) "/dev/console", O_RDWR, 0) < 0)
 		printk(KERN_WARNING "Warning: unable to open an initial console.\n");
 
+//    if(!load_565rle_image(INIT_IMAGE_FILE)) {
+//        struct fb_info *info = registered_fb[0];
+//        fb_pan_display(info, &info->var);
+//    }
+//#ifdef INIT_IMAGE_FILE
+//    {
+//        fd_fb = sys_open((const char __user *) "/dev/fb0", O_RDWR, 0);
+//        if (fd_fb >= 0) {
+//            fd = sys_open(INIT_IMAGE_FILE, O_RDONLY, 0);
+//            if (fd >= 0) {
+//                count = (unsigned)sys_lseek(fd, (off_t)0, 2);
+//                if (count != 0) {
+//                    sys_lseek(fd, (off_t)0, 0);
+//                    data = kmalloc(count, GFP_KERNEL);
+//                    sys_read(fd, (char *)data, count);
+//                    sys_write(fd_fb, (char *)data, count);
+//
+//                    struct fb_info *info = registered_fb[0];
+//                    fb_pan_display(info, &info->var);
+//                }
+//            }
+//        }
+//    }
+//#endif
+
 	(void) sys_dup(0);
 	(void) sys_dup(0);
 
 	current->signal->flags |= SIGNAL_UNKILLABLE;
 
+        printk("\n\nmain.c: ramdisk_exe_cmd=%s\n\n", ramdisk_execute_command);
 	if (ramdisk_execute_command) {
 		run_init_process(ramdisk_execute_command);
 		printk(KERN_WARNING "Failed to execute %s\n",

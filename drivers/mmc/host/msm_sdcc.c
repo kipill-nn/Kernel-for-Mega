@@ -61,6 +61,7 @@ static struct dentry *debugfs_dir;
 #endif
 
 static unsigned int msmsdcc_fmin = 144000;
+//static unsigned int msmsdcc_fmin = 32000000;
 static unsigned int msmsdcc_fmax = 50000000;
 static unsigned int msmsdcc_4bit = 1;
 static unsigned int msmsdcc_pwrsave = 1;
@@ -828,6 +829,7 @@ msmsdcc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 	int rc;
 
 	if (ios->clock) {
+        printk("\n\nios_clock %u | host_clock %u\n\n", ios->clock, host->clk_rate);
 
 		if (!host->clks_on) {
 			clk_enable(host->pclk);
@@ -1169,12 +1171,19 @@ msmsdcc_probe(struct platform_device *pdev)
 	if (ret)
 		goto clk_put;
 
-	ret = clk_set_rate(host->clk, msmsdcc_fmin);
-	if (ret) {
+//	ret = clk_set_rate(host->clk, msmsdcc_fmax);
+//	if (ret) {
+//		printk(KERN_ERR "%s: Clock rate set failed (%d)\n",
+//		       __func__, ret);
+//		goto clk_disable;
+//	}
+//    mdelay(5);
+    ret = clk_set_rate(host->clk, msmsdcc_fmin);
+    if (ret) {
 		printk(KERN_ERR "%s: Clock rate set failed (%d)\n",
 		       __func__, ret);
 		goto clk_disable;
-	}
+    }
 
 	host->clk_rate = clk_get_rate(host->clk);
 

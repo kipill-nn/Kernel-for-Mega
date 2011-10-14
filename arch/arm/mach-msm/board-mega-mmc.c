@@ -91,6 +91,14 @@ struct mmc_vdd_xlat {
 };
 
 static struct mmc_vdd_xlat mmc_vdd_table[] = {
+    { MMC_VDD_165_195,      1800 },
+    { MMC_VDD_20_21,        2050 },
+    { MMC_VDD_21_22,        2150 },
+    { MMC_VDD_22_23,        2250 },
+    { MMC_VDD_23_24,        2350 },
+    { MMC_VDD_24_25,        2450 },
+    { MMC_VDD_25_26,        2550 },
+    { MMC_VDD_26_27,    2650 },
 	{ MMC_VDD_27_28,	2800 },
 	{ MMC_VDD_28_29,	2850 },
 	{ MMC_VDD_29_30,	2900 },
@@ -133,7 +141,7 @@ static uint32_t bahamas_sdslot_switchvdd(struct device *dev, unsigned int vdd)
 	for (i = 0; i < ARRAY_SIZE(mmc_vdd_table); i++) {
 		if (mmc_vdd_table[i].mask == (1 << vdd)) {
 #if DEBUG_SDSLOT_VDD
-			printk(KERN_INFO "%s: Setting level to %u\n",
+			printk(KERN_INFO "%s: Setting level to %u!!!!!!!!!!!!\n",
 					__func__, mmc_vdd_table[i].level);
 #endif
 			vreg_set_level(vreg_sdslot, mmc_vdd_table[i].level);
@@ -153,13 +161,20 @@ static unsigned int bahamas_sdslot_status(struct device *dev)
 	return (!status);
 }
 
-#define BAHAMAS_MMC_VDD	MMC_VDD_27_28 | MMC_VDD_28_29 | MMC_VDD_29_30
+//#define BAHAMAS_MMC_VDD	MMC_VDD_27_28 | MMC_VDD_28_29 | MMC_VDD_29_30
+#define BAHAMAS_MMC_VDD	MMC_VDD_165_195 | MMC_VDD_20_21 | MMC_VDD_21_22 | \
+                        MMC_VDD_22_23 | MMC_VDD_23_24 | MMC_VDD_24_25 | \
+                        MMC_VDD_25_26 | MMC_VDD_26_27 | MMC_VDD_27_28 | \
+                        MMC_VDD_28_29 | MMC_VDD_29_30
+
+//static unsigned int liberty_sdslot_type = MMC_TYPE_SD;
 
 static struct mmc_platform_data bahamas_sdslot_data = {
 	.ocr_mask	= BAHAMAS_MMC_VDD,
-	/* .status_irq		= MSM_GPIO_TO_INT(BAHAMAS_GPIO_SDMC_CD_N), */
+	/*  .status_irq		= MSM_GPIO_TO_INT(BAHAMAS_GPIO_SDMC_CD_N), */
 	.status		= bahamas_sdslot_status,
 	.translate_vdd	= bahamas_sdslot_switchvdd,
+    /* .slot_type = &liberty_sdslot_type, */
 };
 
 /* ---- WIFI ---- */
@@ -338,30 +353,37 @@ EXPORT_SYMBOL(bahamas_wifi_reset);
 
 int __init bahamas_init_mmc(unsigned int sys_rev)
 {
+    uint32_t id;
 	wifi_status_cb = NULL;
 
 
 	sdslot_vreg_enabled = 0;
 
+
+
+//	vreg_wifi_batpa = vreg_get(0, "wlan");
+//	if (IS_ERR(vreg_wifi_batpa))
+//		return PTR_ERR(vreg_wifi_batpa);
+//	vreg_set_level(vreg_wifi_batpa, 3000);
+//
+//	vreg_wifi_osc = vreg_get(0, "rftx");
+//	if (IS_ERR(vreg_wifi_osc))
+//		return PTR_ERR(vreg_wifi_osc);
+//	vreg_set_level(vreg_wifi_osc, 1800);
+//
+    /*  initial WIFI_SHUTDOWN */
+    id = PCOM_GPIO_CFG(BAHAMAS_GPIO_WIFI_EN, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_2MA),
+    msm_proc_comm(PCOM_RPC_GPIO_TLMM_CONFIG_EX, &id, 0);
+
+	printk(KERN_INFO "%s\n", __func__);
+
+    //msm_add_sdcc(1, &bahamas_wifi_data, 0, 0);
+
 	vreg_sdslot = vreg_get(0, "gp6");
 	if (IS_ERR(vreg_sdslot))
 		return PTR_ERR(vreg_sdslot);
 
-	printk(KERN_INFO "%s\n", __func__);
-
-	vreg_wifi_batpa = vreg_get(0, "wlan");
-	if (IS_ERR(vreg_wifi_batpa))
-		return PTR_ERR(vreg_wifi_batpa);
-	vreg_set_level(vreg_wifi_batpa, 3000);
-
-	vreg_wifi_osc = vreg_get(0, "rftx");
-	if (IS_ERR(vreg_wifi_osc))
-		return PTR_ERR(vreg_wifi_osc);
-	vreg_set_level(vreg_wifi_osc, 1800);
-
 	set_irq_wake(MSM_GPIO_TO_INT(BAHAMAS_GPIO_SDMC_CD_N), 1);
-
-    msm_add_sdcc(1, &bahamas_wifi_data, 0, 0);
 
 	if (!opt_disable_sdcard)
 		msm_add_sdcc(2, &bahamas_sdslot_data,

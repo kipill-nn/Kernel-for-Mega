@@ -18,6 +18,7 @@
 #include <linux/errno.h>
 #include <linux/io.h>
 #include <linux/spinlock.h>
+#include <linux/delay.h>
 #include <mach/msm_iomap.h>
 #include <mach/system.h>
 
@@ -139,6 +140,7 @@ int msm_proc_comm(unsigned cmd, unsigned *data1, unsigned *data2)
 
 //		if (proc_comm_wait_for(base + APP_COMMAND, PCOM_CMD_DONE)) //its freeze device
 //			continue;
+        mdelay(10);
 
 		if (readl(base + APP_STATUS) != PCOM_CMD_FAIL) {
 			if (data1)

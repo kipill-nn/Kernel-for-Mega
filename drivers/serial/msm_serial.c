@@ -31,6 +31,7 @@
 #include <linux/serial.h>
 #include <linux/clk.h>
 #include <linux/platform_device.h>
+#include <linux/delay.h>
 
 #include "msm_serial.h"
 
@@ -581,15 +582,24 @@ static void msm_set_termios(struct uart_port *port, struct ktermios *termios,
 	unsigned int baud, mr;
 	struct msm_port *msm_port = UART_TO_MSM(port);
 
+    if (!msm_port || !port || !termios || !old) {
+//        printk("[msm_set_termios] Error! Some param is NULL\n");
+        return;
+    }
+
+//    printk("[msm_set_termios] params OK\n");
 	spin_lock_irqsave(&port->lock, flags);
 	clk_enable(msm_port->clk);
+//    printk("[msm_set_termios] clock enabled\n");
 
 	/* calculate and set baud rate */
 	baud = uart_get_baud_rate(port, termios, old, 300, 115200);
 	msm_set_baud_rate(port, baud);
+//    printk("[msm_set_termios] baud rate set\n");
 
 	/* calculate parity */
 	mr = msm_read(port, UART_MR2);
+//    printk("[msm_set_termios] UART_MR2 read ok\n");
 	mr &= ~UART_MR2_PARITY_MODE;
 	if (termios->c_cflag & PARENB) {
 		if (termios->c_cflag & PARODD)
@@ -627,6 +637,7 @@ static void msm_set_termios(struct uart_port *port, struct ktermios *termios,
 
 	/* set parity, bits per char, and stop bit */
 	msm_write(port, mr, UART_MR2);
+//    printk("[msm_set_termios] UART_MR2 write ok\n");
 
 	/* calculate and set hardware flow control */
 	mr = msm_read(port, UART_MR1);
@@ -847,6 +858,7 @@ static int __init msm_console_setup(struct console *co, char *options)
 	msm_reset(port);
 
 	printk(KERN_INFO "msm_serial: console setup on port #%d\n", port->line);
+    mdelay(200);
 
 	return uart_set_options(port, co, baud, parity, bits, flow);
 }
@@ -887,6 +899,7 @@ static int __init msm_serial_probe(struct platform_device *pdev)
 		return -ENXIO;
 
 	printk(KERN_INFO "msm_serial: detected port #%d\n", pdev->id);
+    mdelay(200);
 
 	port = get_port_from_line(pdev->id);
 	port->dev = &pdev->dev;
