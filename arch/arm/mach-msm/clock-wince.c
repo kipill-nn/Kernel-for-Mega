@@ -604,6 +604,9 @@ static unsigned long pc_clk_get_rate(uint32_t id)
 		case SDC2_CLK:
 		case SDC3_CLK:
 		case SDC4_CLK:
+        case UART1_CLK:
+        case UART2_CLK:
+        case UART3_CLK:
 		case UART1DM_CLK:
 		case UART2DM_CLK:
 		case USB_HS_CLK:
