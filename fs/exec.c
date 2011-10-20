@@ -1272,7 +1272,7 @@ int do_execve(char * filename,
 	struct files_struct *displaced;
 	int retval;
     
-    printk("In fs/exec.c do_exece(%s, %s, %s)\n", filename, argv[0], envp[0]);
+//    printk("In fs/exec.c do_exece(%s, %s, %s)\n", filename, argv[0], envp[0]);
 
 	retval = unshare_files(&displaced);
 	if (retval) {
@@ -1364,7 +1364,7 @@ int do_execve(char * filename,
 		goto out;
     }
 
-    printk("do_exece: succeeded !!\n");
+    //printk("do_exece: succeeded !!\n");
 	/* execve succeeded */
 	mutex_unlock(&current->cred_exec_mutex);
 	acct_update_integrals(current);
