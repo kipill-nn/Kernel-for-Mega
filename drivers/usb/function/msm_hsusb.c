@@ -328,13 +328,13 @@ static void configure_endpoints(struct usb_info *ui)
 
 		ept->head->config = cfg;
 		ept->head->next = TERMINATE;
-		/*
+		
 		if (ept->max_pkt)
 			printk(KERN_INFO "ept #%d %s max:%d head:%p bit:%d\n",
 			       ept->num,
 			       (ept->flags & EPT_FLAG_IN) ? "in" : "out",
 			       ept->max_pkt, ept->head, ept->bit);
-		*/
+		
 	}
 }
 
@@ -1372,24 +1372,24 @@ static void usb_prepare(struct usb_info *ui)
 #endif
 	INIT_WORK(&usb_connect_notifier_wq, send_usb_connect_notify);
 //        printk("\n\nusb_prepare:  8\n\n");
-//	ret = device_create_file(&ui->pdev->dev,//for mega
-//		&dev_attr_usb_cable_connect);
+	ret = device_create_file(&ui->pdev->dev,//for mega
+		&dev_attr_usb_cable_connect);
 //        printk("\n\nusb_prepare:  9\n\n");
 	if (ret != 0)
 		printk(KERN_WARNING "dev_attr_usb_cable_connect failed\n");
 //        printk("\n\nusb_prepare:  10\n\n");
-//	ret = device_create_file(&ui->pdev->dev,
-//		&dev_attr_usb_serial_number);
+	ret = device_create_file(&ui->pdev->dev,
+		&dev_attr_usb_serial_number);
 	if (ret != 0)
 		printk(KERN_WARNING "dev_attr_usb_serial_number failed\n");
 //        printk("\n\nusb_prepare:  11\n\n");
-//	ret = device_create_file(&ui->pdev->dev,//for mega
-//		&dev_attr_dummy_usb_serial_number);
+	ret = device_create_file(&ui->pdev->dev,//for mega
+		&dev_attr_dummy_usb_serial_number);
 	if (ret != 0)
 		printk(KERN_WARNING "dev_attr_dummy_usb_serial_number failed\n");
 //        printk("\n\nusb_prepare:  12\n\n");
-//	ret = device_create_file(&ui->pdev->dev,
-//		&dev_attr_usb_function_switch);
+	ret = device_create_file(&ui->pdev->dev,
+		&dev_attr_usb_function_switch);
 	if (ret != 0)
 		printk(KERN_WARNING "dev_attr_usb_function_switch failed\n");
 }
@@ -1485,7 +1485,7 @@ static void usb_bind_driver(struct usb_info *ui, struct usb_function_info *fi)
 	}
 	fi->endpoints = count;
 //        printk("\n\nmsm_hsusb: 9\n\n");
-//	func->bind(elist, func->context);// for mega
+	func->bind(elist, func->context);// for mega
 //        printk("\nmsm_hsusb:  10\n");
 	printk(KERN_DEBUG "%s: %s\n", __func__, func->name);
 }
